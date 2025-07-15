@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multi-Drone GCS</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+<h1>Ground Control Station</h1>
+<div id="map" style="height: 300px; margin-bottom: 20px;"></div>
+<div id="drone-container"></div>
+
+<button onclick="sendCommand('TAKEOFF')">Takeoff Selected</button>
+<button onclick="sendCommand('LAND')">Land Selected</button>
+<button onclick="sendCommand('RTL')">Return Home</button>
+
+<script>
+    let selected = new Set();
+    let droneMarkers = {};
+    const socket = io();
+
+    const map = L.map('map').setView([20.5937, 78.9629], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    socket.on('connect', () => console.log('Connected'));
+
+    socket.on('init', drones => {
+        for (let id in drones) renderDrone(id, drones[id]);
+    });
+
+    socket.on('drone_update', ({drone_id, telemetry}) => {
+        updateDrone(drone_id, telemetry);
+    });
+
+    function renderDrone(id, drone) {
+        const div = document.createElement('div');
+        div.className = 'drone';
+        div.id = 'drone-' + id;
+        div.innerHTML = `
+            <input type="checkbox" onchange="toggleSelect('${id}', this.checked)">
+            <b>Drone ${id}</b><br>
+            Battery: <span id="bat-${id}">${drone.telemetry.battery}</span>%<br>
+            X: <span id="x-${id}">${drone.telemetry.x}</span> | Y: <span id="y-${id}">${drone.telemetry.y}</span><br>
+            <button onclick="launchMission('${id}')">Mission Planner</button><br>
+            <video src="http://${window.location.hostname}:${drone.video_port}" width="320" height="240" controls autoplay muted></video>
+        `;
+        document.getElementById('drone-container').appendChild(div);
+        updateMapMarker(id, drone.telemetry);
+    }
+
+    function updateDrone(id, telemetry) {
+        document.getElementById(`bat-${id}`).textContent = telemetry.battery;
+        document.getElementById(`x-${id}`).textContent = telemetry.x;
+        document.getElementById(`y-${id}`).textContent = telemetry.y;
+        updateMapMarker(id, telemetry);
+    }
+
+    function toggleSelect(id, checked) {
+        if (checked) selected.add(id); else selected.delete(id);
+    }
+
+    function sendCommand(cmd) {
+        fetch('/command', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({drone_ids: Array.from(selected), command: cmd})
+        });
+    }
+
+    function launchMission(id) {
+        fetch('/launch_mission', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({drone_id: id})
+        }).then(res => res.json()).then(console.log);
+    }
+
+    function updateMapMarker(id, telemetry) {
+        const lat = parseFloat(telemetry.x);
+        const lon = parseFloat(telemetry.y);
+        if (isNaN(lat) || isNaN(lon)) return;
+
+        if (droneMarkers[id]) {
+            droneMarkers[id].setLatLng([lat, lon]);
+        } else {
+            droneMarkers[id] = L.marker([lat, lon]).addTo(map).bindPopup(`Drone ${id}`);
+        }
+    }
+</script>
+</body>
+</html>
