@@ -1,0 +1,3 @@
+body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
+.drone { border: 1px solid #ccc; border-radius: 8px; background: #fff; padding: 15px; margin-bottom: 15px; width: 350px; display: inline-block; vertical-align: top; }
+video { margin-top: 10px; border: 1px solid #333; }
