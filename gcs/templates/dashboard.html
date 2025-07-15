@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Drone Dashboard</title>
+  <meta http-equiv="refresh" content="5">
+  <style>
+    body { font-family: Arial; background: #f4f4f4; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+    th { background: #333; color: white; }
+    .status-online { color: green; font-weight: bold; }
+    .status-offline { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>🛰️ Drone Fleet Dashboard</h2>
+  <p>Total drones: {{ drones|length }}</p>
+  <table>
+    <tr>
+      <th>ID</th>
+      <th>Status</th>
+      <th>Battery</th>
+      <th>GPS</th>
+      <th>Last Seen</th>
+    </tr>
+    {% for id, info in drones.items() %}
+    <tr>
+      <td>{{ id }}</td>
+      <td class="status-{{ 'online' if info.status == 'Online' else 'offline' }}">{{ info.status }}</td>
+      <td>{{ info.battery }}%</td>
+      <td>{{ '✅' if info.gps else '❌' }}</td>
+      <td>{{ info.last_seen }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>
