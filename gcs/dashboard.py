@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 import threading, time, socket, json
 
 app = Flask(__name__)
@@ -6,7 +6,7 @@ drones = {}
 
 def udp_listener():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.bind(("0.0.0.0", 5050))
+    s.bind(("0.0.0.0", 6060))
     while True:
         try:
             data, _ = s.recvfrom(1024)
@@ -23,16 +23,16 @@ def home():
     now = time.time()
     view = {}
     for d, info in drones.items():
-        age = now - info["last_seen"]
-        status = "🟢 Online" if age < 5 else "🔴 Offline"
+        age = now - info.get("last_seen", 0)
+        status = "Online" if age < 5 else "Offline"
         view[d] = {
-            "battery": info["battery"],
-            "gps": "✅" if info["gps_fix"] else "❌",
-            "last_seen": f"{int(age)} sec ago",
+            "battery": info.get("battery", "N/A"),
+            "gps": info.get("gps_fix", False),
+            "last_seen": f"{int(age)}s ago",
             "status": status
         }
-    return jsonify(view)
+    return render_template("dashboard.html", drones=view)
 
 if __name__ == "__main__":
     threading.Thread(target=udp_listener, daemon=True).start()
-    app.run(host="0.0.0.0", port=8000)
+    app.run(host="0.0.0.0", port=8000, debug=False)
