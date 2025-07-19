@@ -18,9 +18,9 @@ run_forever() {
 }
 
 # Run each task in the background with persistent retry
-run_forever "python3 ./udp_drones_final/heartbeat.py" &
-run_forever "bash ./udp_drones_final/start_mavproxy.sh" &
-run_forever "bash ./udp_drones_final/streamvid.sh 100.113.114.176 1" &
+run_forever "python3 ./udp_drones/heartbeat.py" &
+run_forever "bash ./udp_drones/start_mavproxy.sh" &
+run_forever "bash ./udp_drones/streamvid.sh 100.113.114.176 1" &
 
 # Wait for all background tasks to complete (which they never will, but keeps script alive)
 wait
