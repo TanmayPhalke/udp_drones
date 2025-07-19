@@ -1,0 +1,18 @@
+sudo nano /etc/systemd/system/dhclient-usb0.service                 
+
+
+[Unit]
+Description=Run dhclient on usb0 at boot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sleep 60
+ExecStart=/sbin/dhclient -v usb0
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
+
+
