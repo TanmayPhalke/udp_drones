@@ -1,7 +1,7 @@
 import socket, json, time
 
 DRONE_ID = "DRONE_001"
-GCS_IP = "100.113.114.176"
+GCS_IP = "100.127.17.227"
 PORT = 6060
 
 while True:
